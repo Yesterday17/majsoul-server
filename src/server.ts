@@ -41,7 +41,7 @@ export class MajsoulServer {
         return;
       }
 
-      result = /\/([^/]+)(\/.*)?/.exec(ctx.request.url);
+      result = /\/([^/]+)(\/.*)/.exec(ctx.request.url);
       if (result != null) {
         const response = await getRemoteOrCachedFile(
           getServer(result[1]),
