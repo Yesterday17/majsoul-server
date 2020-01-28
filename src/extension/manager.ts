@@ -5,7 +5,6 @@ import path from 'path';
 import { format } from 'prettier';
 import BaseManager from '../base/BaseManager';
 import { Metadata } from '../base/Metadata';
-import { UserConfig } from '../config';
 import { appDataDir, GlobalPath, Logger } from '../global';
 import { ResourcePackReplaceEntry } from '../resourcepack/manager';
 import { ResourcePackManager } from '../resourcepack/resourcepack';
@@ -127,12 +126,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
     for (const key in this.loadedDetails) {
       if (this.loadedDetails[key]) {
         const pack = this.loadedDetails[key];
-        if (
-          pack.enabled &&
-          (pack.metadata as Extension).applyServer.includes(
-            UserConfig.serverToPlay
-          )
-        ) {
+        if (pack.enabled) {
           this.useScriptPromises.push(
             this.useScript(pack.metadata.id, pack.metadata as Extension)
           );
@@ -165,7 +159,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
           if (!this.loadedDetails[id].enabled) return;
 
           const extension = this.loadedDetails[id].metadata as Extension;
-          if (extension.applyServer.includes(UserConfig.serverToPlay)) {
+          if (extension.applyServer.includes(getServer(ctx.params.server).id)) {
             if (!loader.hasLauncher && id.endsWith('_launcher')) {
               loader.hasLauncher = true;
               loader.launcher = id;

@@ -34,7 +34,14 @@ export class MajsoulServer {
 
     // 默认从远端获取文件
     server.use(async ctx => {
-      let result = /\/([^/]+)(\/.*)?/.exec(ctx.request.url);
+      let result = /^\/(zh|en|jp|0|1|2)$/.exec(ctx.request.url);
+      if (result != null) {
+        ctx.response.status = 301;
+        ctx.redirect(`/${result[1]}/`);
+        return;
+      }
+
+      result = /\/([^/]+)(\/.*)?/.exec(ctx.request.url);
       if (result != null) {
         const response = await getRemoteOrCachedFile(
           getServer(result[1]),

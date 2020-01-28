@@ -8,8 +8,8 @@
 git clone https://github.com/Yesterday17/majsoul-server
 cd majsoul-server
 
-# start
-yarn debug
+# launch
+yarn debug launch
 ```
 
 ## 部署
@@ -20,7 +20,7 @@ yarn debug
 {domain} {
   gzip
 
-  proxy / localhost:{11451} {
+  proxy / localhost:{11451}/ {
     header_upstream -Origin
   }
 }

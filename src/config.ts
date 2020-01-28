@@ -5,13 +5,11 @@ import { fillObject } from './utils/object';
 // 配置
 export interface UserConfig {
   port: number;
-  serverToPlay: 0 | 1 | 2;
 }
 
 // 默认配置
 const defaultConfig: UserConfig = {
-  port: 11451,
-  serverToPlay: 0
+  port: 11451
 };
 
 // 冻结对象使其不可更改
