@@ -59,6 +59,7 @@ export class ConsoleLogger extends Logger {
   error(message: string, exit = false) {
     console.info(chalk.red(`[${this.logMain}][ERROR] ${message}`));
     if (exit) {
+      this.error('正在退出...', false);
       process.exit();
     }
   }

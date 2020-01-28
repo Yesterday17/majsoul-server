@@ -2,7 +2,7 @@ import os from 'os';
 import path from 'path';
 import { ConsoleLogger } from './utils/logger';
 
-export const Logger = new ConsoleLogger('Majsoul_Plus');
+export const Logger = new ConsoleLogger('Majsoul-Server');
 
 export interface GlobalPath {
   LocalDir: string;

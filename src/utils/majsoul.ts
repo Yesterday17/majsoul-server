@@ -102,9 +102,7 @@ export async function getRemoteOrCachedFile(
   if (!isRoutePath && fs.existsSync(localPath)) {
     try {
       originData = await readFile(localPath);
-    } catch (e) {
-      Logger.error(e);
-    }
+    } catch {}
   }
 
   // 当上述 readFile 出现异常时或上述 if 条件不符合时向远端服务器请求

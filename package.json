@@ -2,17 +2,18 @@
   "name": "majsoul-server",
   "version": "1.0.0",
   "author": "Yesterday17",
-  "description": "Majsoul separated server",
+  "description": "MajsoulPlus separated server",
   "license": "AGPL-3.0",
   "scripts": {
     "build": "tsc",
     "start": "node ./dist/index.js",
     "debug": "yarn build && yarn start"
   },
+  "bin": "dist/index.js",
   "dependencies": {
-    "adm-zip": "git+https://github.com/cthackers/adm-zip.git",
     "ajv": "^6.10.2",
     "chalk": "^2.4.2",
+    "erii": "^1.2.6",
     "koa": "^2.11.0",
     "koa-router": "^7.4.0",
     "mime-types": "^2.1.26",
@@ -21,7 +22,6 @@
     "semver": "^6.3.0"
   },
   "devDependencies": {
-    "@types/adm-zip": "^0.4.13",
     "@types/koa": "^2.11.0",
     "@types/koa-router": "^7.0.42",
     "@types/mime-types": "^2.1.0",

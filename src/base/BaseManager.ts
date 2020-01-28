@@ -37,54 +37,6 @@ export default abstract class BaseManager {
     this.configPath = configPath;
     this.defaultObject = defaultObj;
     this.schema = schema;
-
-    // ipcMain.on(`get-${name}-details`, event => {
-    //   ManagerWindow.webContents.send(
-    //     `get-${name}-details-response`,
-    //     this.getDetails()
-    //   );
-    // });
-
-    // ipcMain.on(
-    //   `change-${name}-enability`,
-    //   (event, id: string, enabled: boolean) =>
-    //     this.changeEnable(event, id, enabled)
-    // );
-
-    // ipcMain.on(`save-${name}-enabled`, event => {
-    //   this.save();
-    //   event.returnValue = 0;
-    // });
-
-    // ipcMain.on(`import-${name}`, (event, file: string) => {
-    //   unzipDir(file, path.resolve(appDataDir, this.name))
-    //     .then(() => {
-    //       event.returnValue = 0;
-    //     })
-    //     .catch(err => {
-    //       Logger.error(`Failed to import ${name}: ${err}`);
-    //       event.returnValue = 0;
-    //     });
-    // });
-
-    // ipcMain.on(`export-${name}`, (event, id: string, pathToSave: string) => {
-    //   const resp = { err: "" };
-    //   try {
-    //     const folder = path.resolve(appDataDir, this.name, id);
-
-    //     zipDir(
-    //       path.resolve(appDataDir, this.name, id),
-    //       `${pathToSave}.${getExportFileExtension(folder)}`
-    //     );
-    //   } catch (e) {
-    //     resp.err = (e as Error).message;
-    //   }
-    //   event.returnValue = resp;
-    // });
-
-    // ipcMain.on(`remove-${name}`, (event, id: string) =>
-    //   this.removePack(event, id)
-    // );
   }
 
   loadEnabled() {
@@ -93,9 +45,8 @@ export default abstract class BaseManager {
       this.enabled = JSON.parse(
         fs.readFileSync(this.configPath, { encoding: 'utf-8' })
       );
-    } catch (e) {
-      Logger.error(this.configPath);
-      Logger.error(`Failed to load enabled ${this.name}: ${e}`);
+    } catch (err) {
+      Logger.error(`加载已启用拓展失败: ${err}`);
       this.enabled = [];
     }
   }
@@ -131,7 +82,7 @@ export default abstract class BaseManager {
         })
       );
     } catch (e) {
-      Logger.error(`Failed to parse json file ${cfg}: ${e}`);
+      Logger.error(`JSON 解析失败(${cfg}): ${e}`);
       return this;
     }
 
@@ -261,7 +212,7 @@ export default abstract class BaseManager {
     return this.loadedDetails[id].metadata;
   }
 
-  getDetails() {
+  getDetails(): LoadDetails {
     return this.loadedDetails;
   }
 
@@ -315,17 +266,15 @@ export default abstract class BaseManager {
     });
   }
 
-  changeEnable(event, id: string, enabled: boolean) {
+  changeEnable(id: string, enabled: boolean) {
     enabled ? this.enable(id) : this.disable(id);
     this.save();
-    event.returnValue = this.getDetails();
   }
 
-  removePack(event, id: string) {
+  removePack(id: string) {
     this.disable(id);
     removeDirSync(path.resolve(appDataDir, this.name, id));
     this.save();
     this.clear();
-    event.returnValue = 0;
   }
 }

@@ -102,7 +102,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
           entry
         );
         if (!fs.existsSync(p)) {
-          Logger.error(`extension entry ${entry} not found!`);
+          Logger.error(`未找到本地脚本: ${entry}`);
           return;
         }
 
@@ -110,9 +110,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
           const script = fs.readFileSync(p, { encoding: 'utf-8' });
           this.addScript(extension.id, script);
         } catch (e) {
-          Logger.error(
-            `failed to load extension ${extension.name} from ${p}: ${e}`
-          );
+          Logger.error(`属于 ${extension.name} 的脚本 ${p} 加载失败: ${e}`);
           this.addScript(
             extension.id,
             `// failed to load extension ${extension.name} from ${p}: ${e}`
@@ -173,8 +171,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
               loader.launcher = id;
               return;
             } else if (loader.hasLauncher && id.endsWith('_launcher')) {
-              Logger.error(`Multiple launchers, skipping ${id}`);
-              return;
+              Logger.error(`存在多个启动器拓展！`, true);
             }
             if (extension.loadBeforeGame) {
               loader.pre.push(id);
@@ -346,13 +343,13 @@ function addScript(url) {
     });
   }
 
-  changeEnable(event, id: string, enabled: boolean) {
-    super.changeEnable(event, id, enabled);
+  changeEnable(id: string, enabled: boolean) {
+    super.changeEnable(id, enabled);
     ResourcePackManager.setLoadedExtensions(this.loadedDetails);
   }
 
-  removePack(event, id: string) {
-    super.removePack(event, id);
+  removePack(id: string) {
+    super.removePack(id);
     ResourcePackManager.setLoadedExtensions(this.loadedDetails);
   }
 }
