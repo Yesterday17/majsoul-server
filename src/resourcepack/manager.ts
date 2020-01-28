@@ -6,7 +6,8 @@ import { Metadata } from '../base/Metadata';
 import { Extension } from '../extension/manager';
 import { appDataDir, GlobalPath } from '../global';
 import { readFile } from '../utils/fs';
-import { getRemoteSource, isEncryptRes, XOR } from '../utils/majsoul';
+import { getMajsoul, getServer, isEncryptRes, XOR } from '../utils/majsoul';
+import { handleMime } from '../utils/mime';
 import * as schema from './schema.json';
 
 export interface ResourcePack extends Metadata {
@@ -103,92 +104,111 @@ export default class ResourcePackManager extends BaseManager {
     });
 
     // 为每一个资源包分配一个路径
-    this.loadedMap.forEach((pack, id) => {
-      router.get(`/majsoul_plus/resourcepack/${id}/*`, async (ctx, next) => {
-        let queryPath = ctx.path.substr(
-          `/majsoul_plus/resourcepack/${id}/`.length
+    router.get(`/majsoul_plus/resourcepack/:id/*`, async (ctx, next) => {
+      const id = ctx.params.id;
+      if (!this.loadedMap.has(id)) {
+        ctx.response.status = 404;
+        ctx.body = undefined;
+        return;
+      }
+
+      let queryPath = ctx.path
+        .replace(new RegExp(`^/${ctx.params.server}`), '')
+        .substr(`/majsoul_plus/resourcepack/${id}/`.length);
+      const encrypted = isEncryptRes(queryPath);
+      const pack = this.loadedMap.get(id) as ResourcePack;
+
+      // 检测 from 中是否存在 queryPath
+      // 有则重定向到对应的 to
+      for (let rep of pack.replace) {
+        rep = rep as ResourcePackReplaceEntry;
+        if ((rep.from as string[]).includes(queryPath)) {
+          queryPath = rep.to;
+          break;
+        }
+      }
+
+      try {
+        const content = await readFile(
+          path.resolve(
+            appDataDir,
+            GlobalPath.ResourcePackDir,
+            id,
+            'assets',
+            queryPath
+          )
         );
-        const encrypted = isEncryptRes(queryPath);
-
-        // 检测 from 中是否存在 queryPath
-        // 有则重定向到对应的 to
-        for (let rep of (pack as ResourcePack).replace) {
-          rep = rep as ResourcePackReplaceEntry;
-          if ((rep.from as string[]).includes(queryPath)) {
-            queryPath = rep.to;
-            break;
-          }
-        }
-
-        try {
-          const content = await readFile(
-            path.resolve(
-              appDataDir,
-              GlobalPath.ResourcePackDir,
-              id,
-              'assets',
-              queryPath
-            )
-          );
-          ctx.response.status = 200;
-          ctx.body = encrypted ? XOR(content) : content;
-        } catch (e) {
-          ctx.response.status = 404;
-          ctx.body = undefined;
-        }
-      });
+        ctx.response.status = 200;
+        ctx.body = encrypted ? XOR(content) : content;
+        handleMime(ctx);
+      } catch (e) {
+        ctx.response.status = 404;
+        ctx.body = undefined;
+      }
     });
+    // });
 
     // 为每一个扩展分配一个路径
-    this.extensionMap.forEach((pack: ResourcePack, id) => {
-      router.get(`/majsoul_plus/extension/${id}/*`, async (ctx, next) => {
-        let queryPath = ctx.path.substr(
-          `/majsoul_plus/extension/${id}/`.length
+    router.get(`/majsoul_plus/extension/:id/*`, async (ctx, next) => {
+      const id = ctx.params.id;
+      if (!this.extensionMap.has(id)) {
+        ctx.response.status = 404;
+        ctx.body = undefined;
+        return;
+      }
+
+      let queryPath = ctx.path
+        .replace(new RegExp(`^/${ctx.params.server}`), '')
+        .substr(`/majsoul_plus/extension/${id}/`.length);
+      const encrypted = isEncryptRes(queryPath);
+      const pack = this.extensionMap.get(id) as ResourcePack;
+
+      // 检测 from 中是否存在 queryPath
+      // 有则重定向到对应的 to
+      for (let rep of pack.replace) {
+        rep = rep as ResourcePackReplaceEntry;
+        if ((rep.from as string[]).includes(queryPath)) {
+          queryPath = rep.to;
+          break;
+        }
+      }
+
+      try {
+        const content = await readFile(
+          path.resolve(
+            appDataDir,
+            GlobalPath.ExtensionDir,
+            id,
+            'assets',
+            queryPath
+          )
         );
-        const encrypted = isEncryptRes(queryPath);
-
-        // 检测 from 中是否存在 queryPath
-        // 有则重定向到对应的 to
-        for (let rep of pack.replace) {
-          rep = rep as ResourcePackReplaceEntry;
-          if ((rep.from as string[]).includes(queryPath)) {
-            queryPath = rep.to;
-            break;
-          }
-        }
-
-        try {
-          const content = await readFile(
-            path.resolve(
-              appDataDir,
-              GlobalPath.ExtensionDir,
-              id,
-              'assets',
-              queryPath
-            )
-          );
-          ctx.response.status = 200;
-          ctx.body = encrypted ? XOR(content) : content;
-        } catch (e) {
-          ctx.response.status = 404;
-          ctx.body = undefined;
-        }
-      });
+        ctx.response.status = 200;
+        ctx.body = encrypted ? XOR(content) : content;
+        handleMime(ctx);
+      } catch (e) {
+        ctx.response.status = 404;
+        ctx.body = undefined;
+      }
     });
 
     // 修改资源映射表
     router.get(`/resversion([^w]+)w.json`, async (ctx, next) => {
       ctx.response.type = 'application/json';
-      const remote = await getRemoteSource(ctx.path, false);
+      const remote = await getMajsoul(
+        getServer(ctx.params.server),
+        ctx.path.substring(ctx.params.server.length + 1),
+        false
+      );
 
       if (remote.code !== 200) {
-        ctx.res.statusCode = remote.code;
+        ctx.response.status = remote.code;
         ctx.body = {
           code: remote.code,
           message: remote.data
         };
       } else {
-        ctx.res.statusCode = remote.code;
+        ctx.response.status = remote.code;
         const resMap = JSON.parse(remote.data.toString('utf-8'));
 
         // 先加载扩展的资源

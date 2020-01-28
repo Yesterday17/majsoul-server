@@ -5,7 +5,7 @@ import { fillObject } from './utils/object';
 // 配置
 export interface UserConfig {
   port: number;
-  serverToPlay: number;
+  serverToPlay: 0 | 1 | 2;
 }
 
 // 默认配置
@@ -19,19 +19,18 @@ Object.freeze(defaultConfig);
 
 // 加载配置文件 json
 export function LoadConfigJson(): UserConfig {
-  let config: UserConfig;
-  if (!fs.existsSync(Global.UserConfigPath)) SaveConfigJson(defaultConfig);
-  try {
-    config = JSON.parse(
-      fs.readFileSync(Global.UserConfigPath, {
-        encoding: 'utf-8'
-      })
-    );
-  } catch (e) {
-    config = {} as UserConfig;
+  let config = { ...defaultConfig };
+  if (fs.existsSync(Global.UserConfigPath)) {
+    try {
+      config = JSON.parse(
+        fs.readFileSync(Global.UserConfigPath, {
+          encoding: 'utf-8'
+        })
+      );
+      config = fillObject(config, defaultConfig) as UserConfig;
+      SaveConfigJson(config);
+    } catch {}
   }
-  config = fillObject(config, defaultConfig) as UserConfig;
-  SaveConfigJson(config);
   return config;
 }
 

@@ -9,7 +9,7 @@ import { UserConfig } from '../config';
 import { appDataDir, GlobalPath, Logger } from '../global';
 import { ResourcePackReplaceEntry } from '../resourcepack/manager';
 import { ResourcePackManager } from '../resourcepack/resourcepack';
-import { fetchAnySite, getRemoteOrCachedFile } from '../utils/majsoul';
+import { fetchData, getRemoteOrCachedFile, getServer } from '../utils/majsoul';
 import * as schema from './schema.json';
 
 export interface Extension extends Metadata {
@@ -91,7 +91,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
 
       // 加载远程脚本 远程脚本不缓存
       if (entry.match(/^https?:\/\//)) {
-        const script = await fetchAnySite(entry, 'utf-8');
+        const script = await fetchData(entry, 'utf-8');
         this.addScript(extension.id, script);
       } else {
         // 本地脚本
@@ -144,7 +144,7 @@ export default class MajsoulPlusExtensionManager extends BaseManager {
 
     router.get('/:version/code.js', async (ctx, next) => {
       if (this.codejs !== '') {
-        ctx.res.statusCode = 200;
+        ctx.response.status = 200;
         ctx.body = this.codejs;
       }
 
@@ -222,7 +222,7 @@ function addScript(url) {
   });
 }
 `;
-      ctx.res.statusCode = 200;
+      ctx.response.status = 200;
       ctx.res.setHeader('Content-Type', 'application/javascript');
       ctx.body = format(this.codejs, { parser: 'babel' });
     });
@@ -237,7 +237,7 @@ function addScript(url) {
 
     router.get(`/majsoul_plus/extension/scripts/:id/`, async (ctx, next) => {
       if (!this.loadedMap.has(ctx.params.id)) {
-        ctx.res.statusCode = 404;
+        ctx.response.status = 404;
         return;
       }
 
@@ -247,7 +247,7 @@ function addScript(url) {
       const extension = this.loadedMap.get(ctx.params.id) ?? defaultExtension;
       const scripts = this.extensionScripts.get(ctx.params.id) ?? [];
 
-      ctx.res.statusCode = 200;
+      ctx.response.status = 200;
       ctx.res.setHeader('Content-Type', 'application/javascript');
       ctx.body = format(
         `/**
@@ -275,16 +275,23 @@ function addScript(url) {
     });
 
     router.get(`/majsoul_plus/:version/code.js`, async (ctx, next) => {
-      const url = ctx.request.originalUrl.replace(/^\/majsoul_plus/, '');
+      const url = ctx.request.url.replace(
+        new RegExp(`^/${ctx.params.server}/majsoul_plus`),
+        ''
+      );
       const code = (
-        await getRemoteOrCachedFile(url, false, data =>
-          UserConfig.serverToPlay === 0
-            ? Buffer.from(
-                data
-                  .toString('utf-8')
-                  .replace(/\.\.\/region\/region\.txt/g, 'region.txt')
-              )
-            : data
+        await getRemoteOrCachedFile(
+          getServer(ctx.params.server),
+          url,
+          false,
+          data =>
+            getServer(ctx.params.server).id === 0
+              ? Buffer.from(
+                  data
+                    .toString('utf-8')
+                    .replace(/\.\.\/region\/region\.txt/g, 'region.txt')
+                )
+              : data
         )
       ).data.toString('utf-8');
       ctx.res.setHeader('Content-Type', 'application/javascript');
@@ -315,13 +322,13 @@ function addScript(url) {
       `,
         { parser: 'babel' }
       );
-      ctx.res.statusCode = 200;
+      ctx.response.status = 200;
       ctx.res.setHeader('Content-Type', 'application/javascript');
       ctx.body = result;
     });
 
     router.get('/majsoul_plus/plugin/fetch.js', async (ctx, next) => {
-      ctx.res.statusCode = 200;
+      ctx.response.status = 200;
       ctx.res.setHeader('Content-Type', 'application/javascript');
       ctx.body = `window.extensionFetch = id => {
   return (input, init) => {
