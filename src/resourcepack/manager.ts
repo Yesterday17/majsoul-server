@@ -150,6 +150,11 @@ export default class ResourcePackManager extends BaseManager {
 
     // 为每一个扩展分配一个路径
     router.get(`/majsoul_plus/extension/:id/*`, async (ctx, next) => {
+      if (ctx.params.id === 'scripts') {
+        await next();
+        return;
+      }
+
       const id = ctx.params.id;
       if (!this.extensionMap.has(id)) {
         ctx.response.status = 404;

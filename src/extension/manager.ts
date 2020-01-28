@@ -229,13 +229,18 @@ function addScript(url) {
 
     // 获取扩展基本信息
     router.get(`/majsoul_plus/extension/:id`, async (ctx, next) => {
+      if (ctx.params.id === 'scripts') {
+        await next();
+        return;
+      }
+
       ctx.response.status = this.loadedMap.has(ctx.params.id) ? 200 : 404;
       ctx.body = this.loadedMap.has(ctx.params.id)
         ? JSON.stringify(this.loadedMap.get(ctx.params.id), null, 2)
         : 'Not Found';
     });
 
-    router.get(`/majsoul_plus/extension/scripts/:id/`, async (ctx, next) => {
+    router.get(`/majsoul_plus/extension/scripts/:id`, async (ctx, next) => {
       if (!this.loadedMap.has(ctx.params.id)) {
         ctx.response.status = 404;
         return;
