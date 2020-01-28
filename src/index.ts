@@ -1,14 +1,29 @@
 #!/usr/bin/env node
 
 import Erii from 'erii';
+import fs from 'fs';
 import { UserConfig } from './config';
-import { LoadExtension, ExtensionManager } from './extension/extension';
-import { Logger } from './global';
+import { ExtensionManager, LoadExtension } from './extension/extension';
+import { appDataDir, Global, Logger } from './global';
 import {
   LoadResourcePack,
   ResourcePackManager
 } from './resourcepack/resourcepack';
 import { MajsoulServer } from './server';
+
+if (!fs.existsSync(appDataDir)) {
+  Logger.error('Data 目录不存在！', true);
+}
+
+UserConfig.LoadConfigJson();
+
+if (!fs.existsSync(Global.ExtensionFolderPath)) {
+  fs.mkdirSync(Global.ExtensionFolderPath);
+}
+
+if (!fs.existsSync(Global.ResourceFolderPath)) {
+  fs.mkdirSync(Global.ResourceFolderPath);
+}
 
 // 加载资源包
 LoadResourcePack();

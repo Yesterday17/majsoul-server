@@ -40,15 +40,19 @@ export default abstract class BaseManager {
   }
 
   loadEnabled() {
-    this.loadedMap.set('majsoul_plus', this.defaultObject);
-    try {
-      this.enabled = JSON.parse(
-        fs.readFileSync(this.configPath, { encoding: 'utf-8' })
-      );
-    } catch (err) {
-      Logger.error(`加载已启用拓展失败: ${err}`);
+    if (fs.existsSync(this.configPath)) {
+      try {
+        this.enabled = JSON.parse(
+          fs.readFileSync(this.configPath, { encoding: 'utf-8' })
+        );
+      } catch (err) {
+        Logger.error(`加载已启用拓展失败: ${err}`);
+        this.enabled = [];
+      }
+    } else {
       this.enabled = [];
     }
+    this.save();
   }
 
   use(id: string, callback: (pack: Metadata) => void = () => {}) {
