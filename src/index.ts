@@ -135,7 +135,7 @@ Erii.bind(
     description: 'ResourcePack related commands'
   },
   (ctx, options) => {
-    if (typeof options.enable) {
+    if (options.enable) {
       ResourcePackManager.changeEnable(options.enable.toString(), true);
     } else if (options.disable) {
       ResourcePackManager.changeEnable(options.enable.toString(), false);

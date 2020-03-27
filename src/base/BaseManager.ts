@@ -244,7 +244,9 @@ export default abstract class BaseManager {
   }
 
   enable(id: string) {
-    this.loadedDetails[id].errors = [];
+    if (this.loadedDetails[id]) {
+      this.loadedDetails[id].errors = [];
+    }
     this.enabled.push(id);
     this.enableFromConfig();
   }
