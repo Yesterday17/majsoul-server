@@ -20,8 +20,6 @@ export const GlobalPath = {
 };
 
 export class Global {
-  public static readonly XOR_KEY = 73;
-  public static readonly EXTEND_RES_KEYWORD = 'extendRes';
   public static readonly UserConfigPath = path.join(appDataDir, 'config.json');
   public static readonly LocalCachePath = path.join(
     appDataDir,

@@ -25,21 +25,6 @@ export function getServer(id: number | string): RemoteDomain {
   return RemoteDomains[id];
 }
 
-// 加密或者解密文件
-export function XOR(buffer: Buffer): Buffer {
-  const array: number[] = [];
-  for (let index = 0; index < buffer.length; index++) {
-    const byte = buffer.readUInt8(index);
-    array.push(Global.XOR_KEY ^ byte);
-  }
-  return Buffer.from(array);
-}
-
-// 判断请求资源是否是加密资源
-export function isEncryptRes(url: string): boolean {
-  return url.includes(Global.EXTEND_RES_KEYWORD);
-}
-
 // 判断请求是否为路由路径
 export function isPath(url: string): boolean {
   return url.endsWith('\\') || url.endsWith('/') || url.includes('?');
@@ -61,11 +46,11 @@ export async function getMajsoul(
   const status = response.status;
   const data = await response.buffer();
   if (status === 301 || status === 302) {
-    return getMajsoul(server, response.headers['location'], encrypt);
+    return getMajsoul(server, response.headers['location']);
   } else {
     return {
       code: status,
-      data: encrypt ? XOR(data) : data
+      data: data
     };
   }
 }
@@ -90,7 +75,6 @@ export async function getRemoteOrCachedFile(
   callback: (data: Buffer) => Buffer = data => data
 ): Promise<{ code: number; data: Buffer | string }> {
   const originalUrl = url.replace(/^\/\d\//g, '');
-  const isEncrypted = isEncryptRes(originalUrl);
   const isRoutePath = isPath(originalUrl);
   const localPath = getLocalURI(server.id.toString(), originalUrl);
 
@@ -108,11 +92,7 @@ export async function getRemoteOrCachedFile(
   // 当上述 readFile 出现异常时或上述 if 条件不符合时向远端服务器请求
   if (originData === undefined) {
     try {
-      const response = await getMajsoul(
-        server,
-        originalUrl,
-        isEncrypted && !isRoutePath
-      );
+      const response = await getMajsoul(server, originalUrl, !isRoutePath);
       statusCode = response.code;
       let data = response.data;
       if (!isRoutePath && response.code.toString()[0] !== '4') {
@@ -126,9 +106,6 @@ export async function getRemoteOrCachedFile(
   }
   if (encode) {
     responseData = encodeData(originData);
-    if (isEncrypted) {
-      responseData = XOR(responseData);
-    }
   } else {
     responseData = originData;
   }
@@ -157,21 +134,4 @@ export function encodeData(
   } else {
     return Buffer.from(data);
   }
-}
-
-export function getExportFileExtension(dir: string) {
-  const extMap = new Map([
-    ['resourcepack.json', 'mspr'],
-    ['tool.json', 'mspt'],
-    ['extension.json', 'mspe'],
-    ['execute.json', 'mspe'],
-    ['mod.json', 'mspm']
-  ]);
-
-  let ret = '';
-  extMap.forEach(
-    (ext, filename) =>
-      (ret = fs.existsSync(path.resolve(dir, filename)) ? ext : ret)
-  );
-  return ret;
 }
