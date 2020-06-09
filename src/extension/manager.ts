@@ -291,7 +291,7 @@ function addScript(url) {
         )
       ).data.toString('utf-8');
       ctx.res.setHeader('Content-Type', 'application/javascript');
-      ctx.body = code.substr(0, code.length - 'new GameMgr();'.length + 2);
+      ctx.body = code.replace('new GameMgr', '()=>1');
     });
 
     router.get('/majsoul_plus/plugin/console.js', async (ctx, next) => {
