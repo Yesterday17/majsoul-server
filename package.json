@@ -19,7 +19,7 @@
     "mime-types": "^2.1.26",
     "node-fetch": "^2.6.7",
     "prettier": "^1.19.1",
-    "semver": "^6.3.0"
+    "semver": "^6.3.1"
   },
   "devDependencies": {
     "@types/koa": "^2.11.0",
